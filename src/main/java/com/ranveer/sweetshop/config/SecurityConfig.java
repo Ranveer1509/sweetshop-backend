@@ -33,24 +33,30 @@ public class SecurityConfig {
 
         http
             .csrf(csrf -> csrf.disable())
+
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
-                        "/",
+                        "/", 
                         "/api/auth/**",
+
+                        // Swagger endpoints
                         "/swagger-ui/**",
                         "/swagger-ui.html",
-                        "/v3/api-docs",
                         "/v3/api-docs/**",
+                        "/v3/api-docs",
                         "/swagger-resources/**",
-                        "/webjars/**",
-                        "/configuration/**"
+                        "/webjars/**"
                 ).permitAll()
+
                 .anyRequest().authenticated()
             )
+
             .sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
+
             .authenticationProvider(authenticationProvider())
+
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
