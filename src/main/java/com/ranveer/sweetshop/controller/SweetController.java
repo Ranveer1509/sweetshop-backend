@@ -18,6 +18,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 
+import org.springdoc.core.annotations.ParameterObject;
+
 @RestController
 @RequestMapping("/api/sweets")
 @RequiredArgsConstructor
@@ -29,6 +31,7 @@ public class SweetController {
     @PreAuthorize("hasAnyRole('USER','ADMIN')")
     @GetMapping
     public ResponseEntity<Page<Sweet>> getAllSweets(
+            @ParameterObject
             @PageableDefault(size = 5, sort = "name") Pageable pageable) {
 
         return ResponseEntity.ok(sweetService.getAllSweets(pageable));
@@ -41,9 +44,7 @@ public class SweetController {
 
         Sweet savedSweet = sweetService.addSweet(sweet);
 
-        return ResponseEntity
-                .status(201)
-                .body(savedSweet);
+        return ResponseEntity.status(201).body(savedSweet);
     }
 
     // 🔹 Update sweet (ADMIN only)
@@ -73,7 +74,9 @@ public class SweetController {
     @PostMapping("/{id}/purchase")
     public ResponseEntity<Sweet> purchaseSweet(
             @PathVariable Long id,
-            @RequestParam @Min(value = 1, message = "Quantity must be at least 1") int quantity) {
+            @RequestParam
+            @Min(value = 1, message = "Quantity must be at least 1")
+            int quantity) {
 
         Sweet updatedSweet = sweetService.purchaseSweet(id, quantity);
 
@@ -85,7 +88,9 @@ public class SweetController {
     @PostMapping("/{id}/restock")
     public ResponseEntity<Sweet> restockSweet(
             @PathVariable Long id,
-            @RequestParam @Min(value = 1, message = "Quantity must be at least 1") int quantity) {
+            @RequestParam
+            @Min(value = 1, message = "Quantity must be at least 1")
+            int quantity) {
 
         Sweet updatedSweet = sweetService.restockSweet(id, quantity);
 
@@ -99,8 +104,7 @@ public class SweetController {
             @RequestParam(defaultValue = "") String name,
             @RequestParam(defaultValue = "") String category,
             @RequestParam(defaultValue = "0") double minPrice,
-            @RequestParam(defaultValue = "999999") double maxPrice
-    ) {
+            @RequestParam(defaultValue = "999999") double maxPrice) {
 
         List<Sweet> sweets = sweetService.searchSweets(name, category, minPrice, maxPrice);
 
