@@ -67,10 +67,8 @@ public class SecurityConfig {
         return authProvider;
     }
 
-    // ⭐ THIS IS THE IMPORTANT PART (missing earlier)
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
-
 }
