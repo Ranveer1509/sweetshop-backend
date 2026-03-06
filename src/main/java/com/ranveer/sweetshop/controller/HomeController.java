@@ -6,8 +6,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class HomeController {
 
-    @GetMapping("/")
+    @GetMapping("/home")
     public String home() {
-        return "Sweet Shop Backend API is running 🚀";
+        return "Sweet Shop API Running";
     }
 }
