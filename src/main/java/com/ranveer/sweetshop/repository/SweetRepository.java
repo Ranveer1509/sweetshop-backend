@@ -9,6 +9,7 @@ import java.util.List;
 @Repository
 public interface SweetRepository extends JpaRepository<Sweet, Long> {
     boolean existsByNameIgnoreCase(String name);
+    List<Sweet> findByQuantityLessThan(int quantity);
 
     List<Sweet> findByNameContainingIgnoreCaseAndCategoryIgnoreCaseAndPriceBetween(
             String name,
