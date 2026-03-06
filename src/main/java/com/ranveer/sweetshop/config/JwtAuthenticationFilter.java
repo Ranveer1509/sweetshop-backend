@@ -26,20 +26,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final CustomUserDetailsService userDetailsService;
 
-    // ⭐ Skip JWT filter for Swagger + Auth + Actuator
+    // ⭐ Skip JWT filter for public endpoints
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
 
-        String path = request.getServletPath();
+        String path = request.getRequestURI();
 
         return path.startsWith("/api/auth")
                 || path.startsWith("/swagger-ui")
                 || path.startsWith("/v3/api-docs")
-                || path.startsWith("/swagger-resources")
-                || path.startsWith("/webjars")
                 || path.startsWith("/actuator")
                 || path.equals("/")
-                || path.equals("/swagger-ui.html");
+                || path.contains("swagger");
     }
 
     @Override
@@ -50,6 +48,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         final String authHeader = request.getHeader("Authorization");
 
+        // No token → continue request
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
@@ -86,7 +85,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
         } catch (Exception e) {
-            // Ignore invalid token
+            // Ignore invalid token and continue
         }
 
         filterChain.doFilter(request, response);
