@@ -26,27 +26,27 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final CustomUserDetailsService userDetailsService;
 
+    // ⭐ Skip JWT filter for Swagger + Auth + Actuator
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+
+        String path = request.getServletPath();
+
+        return path.startsWith("/api/auth")
+                || path.startsWith("/swagger-ui")
+                || path.startsWith("/v3/api-docs")
+                || path.startsWith("/swagger-resources")
+                || path.startsWith("/webjars")
+                || path.startsWith("/actuator")
+                || path.equals("/")
+                || path.equals("/swagger-ui.html");
+    }
+
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain)
             throws ServletException, IOException {
-
-        String path = request.getServletPath();
-
-        // Allow public endpoints
-                   if (path.startsWith("/api/auth")
-                              || path.startsWith("/swagger-ui")
-                              || path.startsWith("/v3/api-docs")
-                              || path.startsWith("/swagger-resources")
-                              || path.startsWith("/webjars")
-                              || path.startsWith("/actuator")
-                              || path.equals("/swagger-ui.html")
-                              || path.equals("/")) {
-
-                         filterChain.doFilter(request, response);
-                          return;
-                   }
 
         final String authHeader = request.getHeader("Authorization");
 
@@ -86,7 +86,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
         } catch (Exception e) {
-            // If token is invalid, just continue filter chain
+            // Ignore invalid token
         }
 
         filterChain.doFilter(request, response);
