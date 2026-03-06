@@ -10,8 +10,11 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 
+import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class OrderService {
@@ -71,4 +74,27 @@ public class OrderService {
     public List<Order> getAllOrders() {
         return orderRepository.findAll();
     }
+
+    public Map<String, Object> getInvoice(Long orderId) {
+
+    Order order = orderRepository.findById(orderId)
+            .orElseThrow(() -> new RuntimeException("Order not found"));
+
+    Map<String, Object> invoice = new HashMap<>();
+
+    invoice.put("orderId", order.getId());
+    invoice.put("username", order.getUsername());
+    invoice.put("date", order.getOrderDate());
+
+    double subtotal = order.getTotalAmount();
+    double tax = subtotal * 0.05;
+    double total = subtotal + tax;
+
+    invoice.put("subtotal", subtotal);
+    invoice.put("tax", tax);
+    invoice.put("total", total);
+    invoice.put("items", order.getItems());
+
+    return invoice;
+}
 }
