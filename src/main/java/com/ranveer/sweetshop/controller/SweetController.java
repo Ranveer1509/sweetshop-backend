@@ -28,14 +28,13 @@ public class SweetController {
     private final SweetService sweetService;
 
     // 🔹 View all sweets with Pagination (USER + ADMIN)
-    @PreAuthorize("hasAnyRole('USER','ADMIN')")
-    @GetMapping
-    public ResponseEntity<Page<Sweet>> getAllSweets(
-            @ParameterObject
-            @PageableDefault(size = 5, sort = "name") Pageable pageable) {
+   @GetMapping
+public ResponseEntity<Page<Sweet>> getAllSweets(
+        @ParameterObject
+        @PageableDefault(size = 5, sort = "name") Pageable pageable) {
 
-        return ResponseEntity.ok(sweetService.getAllSweets(pageable));
-    }
+    return ResponseEntity.ok(sweetService.getAllSweets(pageable));
+}
 
     // 🔹 Add sweet (ADMIN only)
     @PreAuthorize("hasRole('ADMIN')")
