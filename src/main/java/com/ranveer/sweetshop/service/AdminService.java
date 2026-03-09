@@ -1,36 +1,41 @@
 package com.ranveer.sweetshop.service;
 
 import com.ranveer.sweetshop.dto.AdminStatsResponse;
-import com.ranveer.sweetshop.model.Sweet;
 import com.ranveer.sweetshop.repository.OrderRepository;
 import com.ranveer.sweetshop.repository.SweetRepository;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 
-import java.util.List;
+import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class AdminService {
 
-    private final OrderRepository orderRepository;
     private final SweetRepository sweetRepository;
+    private final OrderRepository orderRepository;
 
     public AdminStatsResponse getStats() {
 
-        long totalOrders = orderRepository.count();
-
-        Double revenue = orderRepository.getTotalRevenue();
-        double totalRevenue = revenue == null ? 0 : revenue;
-
         long totalSweets = sweetRepository.count();
 
-        return new AdminStatsResponse(totalOrders, totalRevenue, totalSweets);
-    }
+        long totalOrders = orderRepository.count();
 
-    public List<Sweet> getLowStock() {
+        double totalRevenue = orderRepository.findAll()
+                .stream()
+                .mapToDouble(order -> order.getTotalAmount())
+                .sum();
 
-        return sweetRepository.findByQuantityLessThan(5);
+        long lowStockItems = sweetRepository.findAll()
+                .stream()
+                .filter(sweet -> sweet.getQuantity() < 10)
+                .count();
+
+        return AdminStatsResponse.builder()
+                .totalSweets(totalSweets)
+                .totalOrders(totalOrders)
+                .totalRevenue(totalRevenue)
+                .lowStockItems(lowStockItems)
+                .build();
     }
 }

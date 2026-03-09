@@ -1,6 +1,11 @@
 package com.ranveer.sweetshop.model;
 
 public enum Role {
+
     USER,
-    ADMIN
+    ADMIN;
+
+    public String getAuthority() {
+        return "ROLE_" + this.name();
+    }
 }

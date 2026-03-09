@@ -8,7 +8,9 @@ import jakarta.validation.constraints.Min;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,38 +29,53 @@ public class SweetController {
 
     private final SweetService sweetService;
 
-    // 🔹 View all sweets with Pagination (USER + ADMIN)
-   @GetMapping
-public ResponseEntity<Page<Sweet>> getAllSweets(
-        @ParameterObject
-        @PageableDefault(size = 5, sort = "name") Pageable pageable) {
+    /* =========================
+       Get All Sweets (Pagination)
+       Accessible by USER & ADMIN
+    ========================= */
 
-    return ResponseEntity.ok(sweetService.getAllSweets(pageable));
-}
+    @GetMapping
+    public ResponseEntity<Page<Sweet>> getAllSweets(
+            @ParameterObject
+            @PageableDefault(size = 5, sort = "name") Pageable pageable) {
 
-    // 🔹 Add sweet (ADMIN only)
+        Page<Sweet> sweets = sweetService.getAllSweets(pageable);
+
+        return ResponseEntity.ok(sweets);
+    }
+
+    /* =========================
+       Add Sweet (Admin)
+    ========================= */
+
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<Sweet> addSweet(@Valid @RequestBody Sweet sweet) {
 
         Sweet savedSweet = sweetService.addSweet(sweet);
 
-        return ResponseEntity.status(201).body(savedSweet);
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedSweet);
     }
 
-    // 🔹 Update sweet (ADMIN only)
+    /* =========================
+       Update Sweet (Admin)
+    ========================= */
+
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<Sweet> updateSweet(
             @PathVariable Long id,
             @Valid @RequestBody Sweet updatedSweet) {
 
-        Sweet updated = sweetService.updateSweet(id, updatedSweet);
+        Sweet sweet = sweetService.updateSweet(id, updatedSweet);
 
-        return ResponseEntity.ok(updated);
+        return ResponseEntity.ok(sweet);
     }
 
-    // 🔹 Delete sweet (ADMIN only)
+    /* =========================
+       Delete Sweet (Admin)
+    ========================= */
+
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteSweet(@PathVariable Long id) {
@@ -68,7 +85,11 @@ public ResponseEntity<Page<Sweet>> getAllSweets(
         return ResponseEntity.noContent().build();
     }
 
-    // 🔹 Purchase sweet (USER + ADMIN)
+    /* =========================
+       Purchase Sweet
+       USER & ADMIN
+    ========================= */
+
     @PreAuthorize("hasAnyRole('USER','ADMIN')")
     @PostMapping("/{id}/purchase")
     public ResponseEntity<Sweet> purchaseSweet(
@@ -82,7 +103,10 @@ public ResponseEntity<Page<Sweet>> getAllSweets(
         return ResponseEntity.ok(updatedSweet);
     }
 
-    // 🔹 Restock sweet (ADMIN only)
+    /* =========================
+       Restock Sweet (Admin)
+    ========================= */
+
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/{id}/restock")
     public ResponseEntity<Sweet> restockSweet(
@@ -96,7 +120,11 @@ public ResponseEntity<Page<Sweet>> getAllSweets(
         return ResponseEntity.ok(updatedSweet);
     }
 
-    // 🔹 Search sweets (USER + ADMIN)
+    /* =========================
+       Search Sweets
+       USER & ADMIN
+    ========================= */
+
     @PreAuthorize("hasAnyRole('USER','ADMIN')")
     @GetMapping("/search")
     public ResponseEntity<List<Sweet>> searchSweets(
@@ -105,7 +133,8 @@ public ResponseEntity<Page<Sweet>> getAllSweets(
             @RequestParam(defaultValue = "0") double minPrice,
             @RequestParam(defaultValue = "999999") double maxPrice) {
 
-        List<Sweet> sweets = sweetService.searchSweets(name, category, minPrice, maxPrice);
+        List<Sweet> sweets =
+                sweetService.searchSweets(name, category, minPrice, maxPrice);
 
         return ResponseEntity.ok(sweets);
     }

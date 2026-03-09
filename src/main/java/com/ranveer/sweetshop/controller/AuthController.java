@@ -10,10 +10,13 @@ import com.ranveer.sweetshop.service.JwtService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -28,29 +31,39 @@ public class AuthController {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    // 🔹 Register User
+    /* =========================
+       Register User
+    ========================= */
+
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
 
         if (userRepository.findByUsername(request.getUsername()).isPresent()) {
+
             return ResponseEntity
                     .badRequest()
                     .body(Map.of("message", "Username already exists"));
         }
 
         User user = new User();
+
         user.setUsername(request.getUsername());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setRole(Role.valueOf(request.getRole().toUpperCase()));
+
+        // Default role for security
+        user.setRole(Role.USER);
 
         userRepository.save(user);
 
         return ResponseEntity
-                .status(201)
+                .status(HttpStatus.CREATED)
                 .body(Map.of("message", "User registered successfully"));
     }
 
-    // 🔹 Login User
+    /* =========================
+       Login User
+    ========================= */
+
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
 
@@ -69,7 +82,8 @@ public class AuthController {
         return ResponseEntity.ok(
                 Map.of(
                         "message", "Login successful",
-                        "token", token
+                        "token", token,
+                        "role", user.getRole()
                 )
         );
     }

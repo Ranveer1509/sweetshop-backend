@@ -6,26 +6,28 @@ import com.ranveer.sweetshop.model.*;
 import com.ranveer.sweetshop.repository.*;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import lombok.extern.slf4j.Slf4j;
+import java.util.*;
 
-import java.util.Map;
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class OrderService {
 
     private final OrderRepository orderRepository;
     private final SweetRepository sweetRepository;
 
+    /* =========================
+       Place Order
+    ========================= */
+
     public Order placeOrder(String username, OrderRequest request) {
 
         List<OrderItem> items = new ArrayList<>();
-
         double total = 0;
 
         for (OrderItemRequest itemRequest : request.getItems()) {
@@ -37,6 +39,7 @@ public class OrderService {
                 throw new RuntimeException("Insufficient stock");
             }
 
+            /* Update stock */
             sweet.setQuantity(sweet.getQuantity() - itemRequest.getQuantity());
             sweetRepository.save(sweet);
 
@@ -50,7 +53,6 @@ public class OrderService {
                     .build();
 
             items.add(orderItem);
-
             total += price;
         }
 
@@ -64,37 +66,70 @@ public class OrderService {
 
         items.forEach(i -> i.setOrder(order));
 
+        log.info("Order placed by {} with total {}", username, total);
+
         return orderRepository.save(order);
     }
+
+    /* =========================
+       Get User Orders
+    ========================= */
 
     public List<Order> getUserOrders(String username) {
         return orderRepository.findByUsername(username);
     }
 
+    /* =========================
+       Get All Orders (Admin)
+    ========================= */
+
     public List<Order> getAllOrders() {
         return orderRepository.findAll();
     }
 
-    public Map<String, Object> getInvoice(Long orderId) {
+    /* =========================
+       Update Order Status
+    ========================= */
 
-    Order order = orderRepository.findById(orderId)
-            .orElseThrow(() -> new RuntimeException("Order not found"));
+    public Order updateStatus(Long id, String status) {
 
-    Map<String, Object> invoice = new HashMap<>();
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
 
-    invoice.put("orderId", order.getId());
-    invoice.put("username", order.getUsername());
-    invoice.put("date", order.getOrderDate());
+        order.setStatus(status);
 
-    double subtotal = order.getTotalAmount();
-    double tax = subtotal * 0.05;
-    double total = subtotal + tax;
+        log.info("Order {} status updated to {}", id, status);
 
-    invoice.put("subtotal", subtotal);
-    invoice.put("tax", tax);
-    invoice.put("total", total);
-    invoice.put("items", order.getItems());
+        return orderRepository.save(order);
+    }
 
-    return invoice;
-}
+    /* =========================
+       Generate Invoice
+    ========================= */
+
+    public Map<String, Object> getInvoice(String username, Long orderId) {
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        if (!order.getUsername().equals(username)) {
+            throw new RuntimeException("Unauthorized access to invoice");
+        }
+
+        Map<String, Object> invoice = new HashMap<>();
+
+        double subtotal = order.getTotalAmount();
+        double tax = subtotal * 0.05;
+        double total = subtotal + tax;
+
+        invoice.put("orderId", order.getId());
+        invoice.put("username", order.getUsername());
+        invoice.put("date", order.getOrderDate());
+        invoice.put("subtotal", subtotal);
+        invoice.put("tax", tax);
+        invoice.put("total", total);
+        invoice.put("items", order.getItems());
+
+        return invoice;
+    }
 }

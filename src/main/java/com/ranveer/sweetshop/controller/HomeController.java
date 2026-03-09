@@ -1,13 +1,19 @@
 package com.ranveer.sweetshop.controller;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
+@RequestMapping("/api")
 public class HomeController {
 
     @GetMapping("/home")
-    public String home() {
-        return "Sweet Shop API Running";
+    public Map<String, String> home() {
+
+        return Map.of(
+                "message", "Sweet Shop API Running"
+        );
+
     }
 }

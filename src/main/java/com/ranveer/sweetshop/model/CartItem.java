@@ -4,7 +4,9 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Data
+@Table(name = "cart_items")
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -14,13 +16,18 @@ public class CartItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private String username;
 
+    @Column(nullable = false)
     private Long sweetId;
 
+    @Column(nullable = false)
     private String sweetName;
 
+    @Column(nullable = false)
     private int quantity;
 
+    @Column(nullable = false)
     private double price;
 }

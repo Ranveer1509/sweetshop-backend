@@ -22,8 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
-@AutoConfigureMockMvc(addFilters = false)   // ⭐ disables security filters
-@ActiveProfiles("test")                     // ⭐ use test profile
+@AutoConfigureMockMvc(addFilters = false) // disable security filters
+@ActiveProfiles("test")                   // use test profile
 @Transactional
 class SweetServiceTest {
 
@@ -34,14 +34,23 @@ class SweetServiceTest {
     private SweetRepository sweetRepository;
 
     @BeforeEach
-    void cleanDatabase() {
+    void setUp() {
         sweetRepository.deleteAll();
     }
+
+    /* =========================
+       Add Sweet Test
+    ========================= */
 
     @Test
     void shouldAddNewSweet() {
 
-        Sweet sweet = new Sweet(null, "Ladoo", "Indian", 20.0, 50);
+        Sweet sweet = Sweet.builder()
+                .name("Ladoo")
+                .category("Indian")
+                .price(20.0)
+                .quantity(50)
+                .build();
 
         Sweet saved = sweetService.addSweet(sweet);
 
@@ -49,11 +58,20 @@ class SweetServiceTest {
         assertEquals("Ladoo", saved.getName());
     }
 
+    /* =========================
+       Get All Sweets Test
+    ========================= */
+
     @Test
     void shouldReturnAllSweets() {
 
-        sweetService.addSweet(new Sweet(null, "Barfi", "Indian", 25.0, 20));
-        sweetService.addSweet(new Sweet(null, "Cake", "Bakery", 40.0, 15));
+        sweetService.addSweet(
+                Sweet.builder().name("Barfi").category("Indian").price(25).quantity(20).build()
+        );
+
+        sweetService.addSweet(
+                Sweet.builder().name("Cake").category("Bakery").price(40).quantity(15).build()
+        );
 
         Pageable pageable = PageRequest.of(0, 10);
 
@@ -62,11 +80,15 @@ class SweetServiceTest {
         assertEquals(2, sweets.getTotalElements());
     }
 
+    /* =========================
+       Purchase Sweet Test
+    ========================= */
+
     @Test
     void shouldDecreaseQuantityWhenPurchased() {
 
         Sweet sweet = sweetService.addSweet(
-                new Sweet(null, "Ladoo", "Indian", 20.0, 10)
+                Sweet.builder().name("Ladoo").category("Indian").price(20).quantity(10).build()
         );
 
         Sweet updated = sweetService.purchaseSweet(sweet.getId(), 3);
@@ -74,23 +96,32 @@ class SweetServiceTest {
         assertEquals(7, updated.getQuantity());
     }
 
+    /* =========================
+       Insufficient Stock Test
+    ========================= */
+
     @Test
     void shouldThrowExceptionIfInsufficientStock() {
 
         Sweet sweet = sweetService.addSweet(
-                new Sweet(null, "Barfi", "Indian", 25.0, 5)
+                Sweet.builder().name("Barfi").category("Indian").price(25).quantity(5).build()
         );
 
-        assertThrows(InsufficientStockException.class, () -> {
-            sweetService.purchaseSweet(sweet.getId(), 10);
-        });
+        assertThrows(
+                InsufficientStockException.class,
+                () -> sweetService.purchaseSweet(sweet.getId(), 10)
+        );
     }
+
+    /* =========================
+       Restock Test
+    ========================= */
 
     @Test
     void shouldIncreaseQuantityWhenRestocked() {
 
         Sweet sweet = sweetService.addSweet(
-                new Sweet(null, "Kaju Katli", "Premium", 50.0, 5)
+                Sweet.builder().name("Kaju Katli").category("Premium").price(50).quantity(5).build()
         );
 
         Sweet updated = sweetService.restockSweet(sweet.getId(), 10);
@@ -98,24 +129,41 @@ class SweetServiceTest {
         assertEquals(15, updated.getQuantity());
     }
 
+    /* =========================
+       Negative Restock Test
+    ========================= */
+
     @Test
     void shouldThrowExceptionIfRestockQuantityIsNegative() {
 
         Sweet sweet = sweetService.addSweet(
-                new Sweet(null, "Milk Cake", "Indian", 30.0, 10)
+                Sweet.builder().name("Milk Cake").category("Indian").price(30).quantity(10).build()
         );
 
-        assertThrows(IllegalArgumentException.class, () -> {
-            sweetService.restockSweet(sweet.getId(), -5);
-        });
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> sweetService.restockSweet(sweet.getId(), -5)
+        );
     }
+
+    /* =========================
+       Search Test
+    ========================= */
 
     @Test
     void shouldSearchSweetsByNameCategoryAndPriceRange() {
 
-        sweetService.addSweet(new Sweet(null, "Chocolate Cake", "Bakery", 100.0, 10));
-        sweetService.addSweet(new Sweet(null, "Vanilla Cake", "Bakery", 80.0, 5));
-        sweetService.addSweet(new Sweet(null, "Ladoo", "Indian", 20.0, 50));
+        sweetService.addSweet(
+                Sweet.builder().name("Chocolate Cake").category("Bakery").price(100).quantity(10).build()
+        );
+
+        sweetService.addSweet(
+                Sweet.builder().name("Vanilla Cake").category("Bakery").price(80).quantity(5).build()
+        );
+
+        sweetService.addSweet(
+                Sweet.builder().name("Ladoo").category("Indian").price(20).quantity(50).build()
+        );
 
         var result = sweetService.searchSweets("Cake", "Bakery", 50.0, 120.0);
 
